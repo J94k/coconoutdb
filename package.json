@@ -1,0 +1,24 @@
+{
+  "name": "onoutdb",
+  "version": "1.0.0",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/esm/index.d.ts",
+  "files": [
+    "/lib"
+  ],
+  "scripts": {
+    "build": ""
+  },
+  "keywords": [
+    "onoutdb"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "mobx": "^6.6.0",
+    "mobx-react-lite": "^3.4.0"
+  },
+  "peerDependencies": {
+    "web3": "^1.7.3"
+  }
+}
