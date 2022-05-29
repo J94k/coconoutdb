@@ -1,37 +1,51 @@
-import { configure, makeObservable, observable, action, flow } from 'mobx'
+import { configure, makeObservable, observable, action } from 'mobx'
 import { log } from './utils'
-import Chain, { Data, ChainInterface } from './Chain'
+import Chain, { Data, ChainInterface, ChainParams } from './Chain'
 
 configure({
   enforceActions: 'always',
   computedRequiresReaction: true,
   reactionRequiresObservable: true,
-  observableRequiresReaction: true,
-  disableErrorBoundaries: true,
+  disableErrorBoundaries: false,
 })
 
 export interface StoreInterface {
-  state: Data
-  chain: ChainInterface
-  newChain: (params: { address: string; rpc: string; library: any }) => void
+  state: Data | null
+  chain: ChainInterface | null
+  newState: (state: Data | null) => void
+  newChain: (params: ChainParams) => void
   get: (key: string) => any
   set: (key: string, value: any) => void
   delete: (key: string) => void
 }
 
 export default class Store implements StoreInterface {
-  state
-  chain
+  state: Data | null = null
+  chain: ChainInterface | null = null
 
-  constructor(params) {
+  constructor(
+    params: ChainParams & {
+      state: Data
+    }
+  ) {
     makeObservable(this, {
       state: observable,
       chain: observable,
+      newState: action,
       newChain: action,
       set: action,
       delete: action,
     })
-    this.chain = this.newChain(params)
+    this.newState(params.state)
+    this.newChain(params)
+  }
+
+  newState(state) {
+    try {
+      this.state = state
+    } catch (error) {
+      throw error
+    }
   }
 
   newChain(params) {
@@ -45,7 +59,9 @@ export default class Store implements StoreInterface {
 
   get(key) {
     try {
-      return this.state[key]
+      if (this.state) {
+        return this.state[key]
+      }
     } catch (error) {
       throw error
     }
@@ -53,7 +69,9 @@ export default class Store implements StoreInterface {
 
   set(key, value) {
     try {
-      this.state[key] = value
+      if (this.state) {
+        this.state[key] = value
+      }
     } catch (error) {
       throw error
     }
@@ -61,7 +79,9 @@ export default class Store implements StoreInterface {
 
   delete(key) {
     try {
-      delete this.state[key]
+      if (this.state) {
+        delete this.state[key]
+      }
     } catch (error) {
       throw error
     }

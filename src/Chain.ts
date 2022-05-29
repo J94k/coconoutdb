@@ -7,8 +7,15 @@ export type Data = {
   [k: string]: any
 }
 
+export type ChainParams = {
+  address?: string
+  rpc?: string
+  library?: any
+}
+
 export interface ChainInterface {
   readonly address: string
+  readonly rpc: string
   readonly library: any
   readonly instance: any
   readonly signerInstance: any
@@ -36,16 +43,17 @@ const methodPlug = (params: any) => {}
 
 export default class Chain implements ChainInterface {
   address
+  rpc
   library
   instance
   signerInstance
   pending
 
-  constructor({ address, rpc, library }: { address: string; rpc: string; library: any }) {
+  constructor({ address, rpc, library }: ChainParams) {
     try {
       // For the requests that don't change a blockchain state.
       // We can init it and use from any network
-      const web3 = new Web3(rpc)
+      const web3 = new Web3(rpc || '')
       // For the requests that change the state.
       // It works only when we're on the provider network during the changes.
       const signerWeb3 = new Web3(library?.provider || '')
