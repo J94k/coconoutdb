@@ -1,14 +1,22 @@
-import { makeAutoObservable, makeObservable, observable, action, flow } from 'mobx'
+import { configure, makeObservable, observable, action, flow } from 'mobx'
 import { log } from './utils'
 import Chain, { Data, ChainInterface } from './Chain'
+
+configure({
+  enforceActions: 'always',
+  computedRequiresReaction: true,
+  reactionRequiresObservable: true,
+  observableRequiresReaction: true,
+  disableErrorBoundaries: true,
+})
 
 export interface StoreInterface {
   state: Data
   chain: ChainInterface
   newChain: (params: { address: string; rpc: string; library: any }) => void
-  get: () => any
-  set: () => void
-  delete: () => void
+  get: (key: string) => any
+  set: (key: string, value: any) => void
+  delete: (key: string) => void
 }
 
 export default class Store implements StoreInterface {
@@ -35,9 +43,27 @@ export default class Store implements StoreInterface {
     }
   }
 
-  get() {}
+  get(key) {
+    try {
+      return this.state[key]
+    } catch (error) {
+      throw error
+    }
+  }
 
-  set() {}
+  set(key, value) {
+    try {
+      this.state[key] = value
+    } catch (error) {
+      throw error
+    }
+  }
 
-  delete() {}
+  delete(key) {
+    try {
+      delete this.state[key]
+    } catch (error) {
+      throw error
+    }
+  }
 }

@@ -20,5 +20,8 @@
   },
   "peerDependencies": {
     "web3": "^1.7.3"
+  },
+  "devDependencies": {
+    "jest": "^28.1.0"
   }
 }

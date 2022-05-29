@@ -12,6 +12,7 @@ export interface ChainInterface {
   readonly library: any
   readonly instance: any
   readonly signerInstance: any
+  readonly pending: boolean
 
   merge: (params: { oldData: Data; newData: Data }) => Data
 
@@ -38,6 +39,7 @@ export default class Chain implements ChainInterface {
   library
   instance
   signerInstance
+  pending
 
   constructor({ address, rpc, library }: { address: string; rpc: string; library: any }) {
     try {
@@ -90,13 +92,16 @@ export default class Chain implements ChainInterface {
 
   async fetch(key) {
     try {
+      this.pending = true
       const { info, owner } = await this.instance.methods.getData(key).call()
 
+      this.pending = false
       return {
         data: info ? JSON.parse(info || '{}') : info,
         owner: owner && owner.toLowerCase() !== ZERO_ADDRESS ? owner : '',
       }
     } catch (error) {
+      this.pending = false
       log({ title: 'Store: fetch()', value: error, color: 'red' })
       throw error
     }
@@ -104,6 +109,7 @@ export default class Chain implements ChainInterface {
 
   async save({ key, data, owner, onHash = methodPlug, onReceipt = methodPlug }) {
     try {
+      this.pending = true
       const { data: sourceData, owner: sourceOwner } = await this.fetch(key)
 
       const newData = this.merge({
@@ -124,10 +130,17 @@ export default class Chain implements ChainInterface {
           .on('receipt', (receipt: any) => {
             if (typeof onReceipt === 'function') onReceipt(receipt)
           })
-          .then(resolve)
-          .catch(reject)
+          .then((response) => {
+            this.pending = false
+            resolve(response)
+          })
+          .catch((error) => {
+            this.pending = false
+            reject(error)
+          })
       })
     } catch (error) {
+      this.pending = false
       log({ title: 'Store: save()', value: error, color: 'red' })
       throw error
     }
@@ -135,9 +148,13 @@ export default class Chain implements ChainInterface {
 
   async clear(key) {
     try {
+      this.pending = true
       const { data, owner } = await this.fetch(key)
 
-      if (!data || !owner) return false
+      if (!data || !owner) {
+        this.pending = false
+        return false
+      }
 
       return new Promise(async (resolve, reject) => {
         await this.signerInstance.methods
@@ -148,10 +165,16 @@ export default class Chain implements ChainInterface {
           .send({
             from: owner,
           })
-          .then(resolve)
-          .catch(reject)
+          .then((response) => {
+            resolve(response)
+          })
+          .catch((error) => {
+            this.pending = false
+            reject(error)
+          })
       })
     } catch (error) {
+      this.pending = false
       log({ title: 'Store: clear()', value: error, color: 'red' })
       throw error
     }
