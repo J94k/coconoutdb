@@ -12,9 +12,6 @@
   "engines": {
     "node": "^16.14.0"
   },
-  "publishConfig": {
-    "onoutdb:registry": "https://npm.pkg.github.com"
-  },
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -cw",
