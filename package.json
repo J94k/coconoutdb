@@ -5,10 +5,15 @@
   "module": "./lib/esm/index.js",
   "types": "./lib/esm/index.d.ts",
   "files": [
-    "/lib"
+    "/lib",
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": "^16.14.0"
+  },
+  "publishConfig": {
+    "onoutdb:registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "build": "rollup -c",
