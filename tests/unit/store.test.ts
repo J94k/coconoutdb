@@ -16,16 +16,27 @@ describe('Store', () => {
   })
 
   it('should update keys values', () => {
-    expect(store.state.foo).toBe(1)
-    expect(store.state.kek).toBe(3)
-    expect(store.state.users).toStrictEqual(['Bob', 'Alice', 'BobaAlice'])
+    expect(store.state?.foo).toBe(1)
+    expect(store.state?.kek).toBe(3)
+    expect(store.state?.users).toStrictEqual(['Bob', 'Alice', 'BobaAlice'])
 
     store.set('foo', { foo: 1 })
     store.set('kek', 0)
-    store.set('users', [...store.state.users, 'CataDogaBird'])
+    store.set('users', [...store.state?.users, 'CataDogaBird'])
 
-    expect(store.state.foo).toStrictEqual({ foo: 1 })
-    expect(store.state.kek).toBe(0)
-    expect(store.state.users).toStrictEqual(['Bob', 'Alice', 'BobaAlice', 'CataDogaBird'])
+    expect(store.state?.foo).toStrictEqual({ foo: 1 })
+    expect(store.state?.kek).toBe(0)
+    expect(store.state?.users).toStrictEqual(['Bob', 'Alice', 'BobaAlice', 'CataDogaBird'])
+  })
+
+  it('should delete keys', () => {
+    expect(store.state?.foo).toStrictEqual({ foo: 1 })
+    expect(store.state?.kek).toBe(0)
+
+    store.delete('foo')
+    store.delete('kek')
+
+    expect(store.state?.foo).toBe(undefined)
+    expect(store.state?.kek).toBe(undefined)
   })
 })
