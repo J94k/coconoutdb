@@ -1,13 +1,6 @@
-import { configure, makeObservable, observable, action } from 'mobx'
+import { makeObservable, observable, action } from 'mobx'
 import { log } from './utils'
 import Chain, { Data, ChainInterface, ChainParams } from './Chain'
-
-configure({
-  enforceActions: 'always',
-  computedRequiresReaction: true,
-  reactionRequiresObservable: true,
-  disableErrorBoundaries: false,
-})
 
 export interface StoreInterface {
   state: Data | null
