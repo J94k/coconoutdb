@@ -19,7 +19,8 @@
     "experimentalDecorators": true,
     "useDefineForClassFields": true,
     "jsx": "react",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "types": ["jest"]
   },
-  "exclude": ["node_modules", "tests"]
+  "exclude": ["node_modules"]
 }
