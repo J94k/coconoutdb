@@ -1,3 +1,5 @@
 node_modules
-*-lock.json
 lib
+
+*-lock.json
+*.tgz

@@ -21,8 +21,7 @@
   ],
   "license": "ISC",
   "dependencies": {
-    "mobx": "^6.6.0",
-    "mobx-react-lite": "^3.4.0"
+    "mobx": "^6.6.0"
   },
   "peerDependencies": {
     "web3": "^1.7.3"
