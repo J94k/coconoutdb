@@ -4,10 +4,10 @@ import { EVM_ADDRESS_REGEXP } from './constants'
 import Chain, { Data, ChainInterface, ChainParams } from './Chain'
 
 export interface StoreInterface {
-  state?: Data
-  chain?: ChainInterface
-  readonly key?: string
-  readonly ownerAddress?: string
+  state: Data | null
+  chain: ChainInterface | null
+  readonly key: string | null
+  readonly ownerAddress: string | null
   newState: (state?: Data) => void
   newKey: (key: string) => void
   newOwnerAddress: (address: string) => void
@@ -18,10 +18,10 @@ export interface StoreInterface {
 }
 
 export default class Store implements StoreInterface {
-  state
-  chain
-  key
-  ownerAddress
+  state: Data | null = null
+  chain: ChainInterface | null = null
+  key = null
+  ownerAddress = null
 
   constructor(
     params: ChainParams & {
@@ -30,6 +30,13 @@ export default class Store implements StoreInterface {
       ownerAddress: string
     }
   ) {
+    const { state, key, ownerAddress } = params
+
+    this.newState(state)
+    this.newKey(key)
+    this.newOwnerAddress(ownerAddress)
+    this.newChain(params)
+
     makeObservable(this, {
       state: observable,
       chain: observable,
@@ -42,13 +49,6 @@ export default class Store implements StoreInterface {
       set: action,
       delete: action,
     })
-
-    const { state, key, ownerAddress } = params
-
-    this.newState(state)
-    this.newKey(key)
-    this.newOwnerAddress(ownerAddress)
-    this.newChain(params)
   }
 
   newState(state) {
@@ -116,14 +116,14 @@ export default class Store implements StoreInterface {
 
   async save() {
     try {
-      const { key, ownerAddress } = this
+      const { state, key, ownerAddress, chain } = this
 
-      if (!key || !ownerAddress) return
+      if (!chain || !key || !ownerAddress || !state) return
 
-      return this.chain.save({
+      return chain.save({
         key,
         owner: ownerAddress,
-        data: this.state,
+        data: state,
       })
     } catch (error) {
       log({ value: error, title: 'Store: save()', type: Log.error })

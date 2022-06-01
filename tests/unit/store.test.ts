@@ -1,4 +1,5 @@
 import Store, { StoreInterface } from '../../src/Store'
+import { ZERO_ADDRESS } from '../../src/constants'
 
 describe('Store', () => {
   let store: StoreInterface
@@ -12,6 +13,8 @@ describe('Store', () => {
         pek: 4,
         users: ['Bob', 'Alice', 'BobaAlice'],
       },
+      key: 'example.com',
+      ownerAddress: ZERO_ADDRESS,
     })
   })
 
@@ -38,5 +41,16 @@ describe('Store', () => {
 
     expect(store.state?.foo).toBe(undefined)
     expect(store.state?.kek).toBe(undefined)
+  })
+
+  it('should update saving parameters', () => {
+    expect(store.key).toBe('example.com')
+    expect(store.ownerAddress).toBe(ZERO_ADDRESS)
+
+    store.newKey('different.com')
+    store.newOwnerAddress('0x8ee296e2f81c9172d90210a6eb01234bd169d29a')
+
+    expect(store.key).toBe('different.com')
+    expect(store.ownerAddress).toBe('0x8ee296e2f81c9172d90210a6eb01234bd169d29a')
   })
 })
