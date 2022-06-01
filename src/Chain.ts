@@ -1,16 +1,24 @@
 import Web3 from 'web3'
 import StorageBuild from './abi/storage.json'
-import { log } from './utils'
+import { log, Log } from './utils'
 import { ZERO_ADDRESS } from './constants'
 
-export type Data<T = any> = {
-  [k: string]: T
+export type Data<Key extends string = string, Value = any> = {
+  [k in Key]: Value
 }
 
 export type ChainParams = {
   address?: string
   rpc?: string
   provider?: any
+}
+
+export type SaveParams = {
+  key: string
+  data: Data
+  owner: string
+  onHash?: (hash: string) => void
+  onReceipt?: (receipt: any) => void
 }
 
 export interface ChainInterface {
@@ -22,20 +30,11 @@ export interface ChainInterface {
   readonly pending: boolean
 
   merge: (params: { oldData?: Data; newData?: Data }) => Data
-
-  save: (params: {
-    key: string
-    data: Data
-    owner: string
-    onHash?: (hash: string) => void
-    onReceipt?: (receipt: any) => void
-  }) => Promise<any>
-
+  save: (params: SaveParams) => Promise<any>
   fetch: (key: string) => Promise<{
     data: Data
     owner: string
   }>
-
   clear: (key: string) => Promise<any>
 }
 
@@ -63,7 +62,7 @@ export default class Chain implements ChainInterface {
       this.instance = new web3.eth.Contract(StorageBuild.abi as any[], address)
       this.signerInstance = new signerWeb3.eth.Contract(StorageBuild.abi as any[], address)
     } catch (error) {
-      log({ title: 'new Chain', value: error, color: 'red' })
+      log({ value: error, title: 'new Chain', type: Log.error })
       throw error
     }
   }
@@ -93,7 +92,7 @@ export default class Chain implements ChainInterface {
 
       return data
     } catch (error) {
-      log({ title: 'Store: merge()', value: error, color: 'red' })
+      log({ value: error, title: 'Chain: merge()', type: Log.error })
       throw error
     }
   }
@@ -110,7 +109,7 @@ export default class Chain implements ChainInterface {
       }
     } catch (error) {
       this.pending = false
-      log({ title: 'Store: fetch()', value: error, color: 'red' })
+      log({ value: error, title: 'Chain: fetch()', type: Log.error })
       throw error
     }
   }
@@ -149,7 +148,7 @@ export default class Chain implements ChainInterface {
       })
     } catch (error) {
       this.pending = false
-      log({ title: 'Store: save()', value: error, color: 'red' })
+      log({ value: error, title: 'Chain: save()', type: Log.error })
       throw error
     }
   }
@@ -183,7 +182,7 @@ export default class Chain implements ChainInterface {
       })
     } catch (error) {
       this.pending = false
-      log({ title: 'Store: clear()', value: error, color: 'red' })
+      log({ value: error, title: 'Chain: clear()', type: Log.error })
       throw error
     }
   }
