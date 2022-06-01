@@ -3,9 +3,9 @@ import { log } from './utils'
 import Chain, { Data, ChainInterface, ChainParams } from './Chain'
 
 export interface StoreInterface {
-  state: Data | null
-  chain: ChainInterface | null
-  newState: (state: Data | null) => void
+  state?: Data
+  chain?: ChainInterface
+  newState: (state?: Data) => void
   newChain: (params: ChainParams) => void
   get: (key: string) => any
   set: (key: string, value: any) => void
@@ -13,8 +13,8 @@ export interface StoreInterface {
 }
 
 export default class Store implements StoreInterface {
-  state: Data | null = null
-  chain: ChainInterface | null = null
+  state
+  chain
 
   constructor(
     params: ChainParams & {

@@ -3,8 +3,8 @@ import StorageBuild from './abi/storage.json'
 import { log } from './utils'
 import { ZERO_ADDRESS } from './constants'
 
-export type Data = {
-  [k: string]: any
+export type Data<T = any> = {
+  [k: string]: T
 }
 
 export type ChainParams = {
@@ -16,12 +16,12 @@ export type ChainParams = {
 export interface ChainInterface {
   readonly address: string
   readonly rpc: string
-  readonly provider: any
+  readonly provider: string
   readonly instance: any
   readonly signerInstance: any
   readonly pending: boolean
 
-  merge: (params: { oldData: Data; newData: Data }) => Data
+  merge: (params: { oldData?: Data; newData?: Data }) => Data
 
   save: (params: {
     key: string
@@ -60,15 +60,15 @@ export default class Chain implements ChainInterface {
 
       this.address = address
       this.provider = provider
-      this.instance = new web3.eth.Contract(StorageBuild.abi as any, address)
-      this.signerInstance = new signerWeb3.eth.Contract(StorageBuild.abi as any, address)
+      this.instance = new web3.eth.Contract(StorageBuild.abi as any[], address)
+      this.signerInstance = new signerWeb3.eth.Contract(StorageBuild.abi as any[], address)
     } catch (error) {
       log({ title: 'new Chain', value: error, color: 'red' })
       throw error
     }
   }
 
-  merge({ oldData = {}, newData = {} }: { oldData: Data; newData: Data }): Data {
+  merge({ oldData = {}, newData = {} }) {
     try {
       const data = { ...oldData }
 
@@ -135,7 +135,7 @@ export default class Chain implements ChainInterface {
           .on('transactionHash', (hash: string) => {
             if (typeof onHash === 'function') onHash(hash)
           })
-          .on('receipt', (receipt: any) => {
+          .on('receipt', (receipt) => {
             if (typeof onReceipt === 'function') onReceipt(receipt)
           })
           .then((response) => {
