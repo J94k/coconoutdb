@@ -1,10 +1,10 @@
 import Web3 from 'web3'
 import StorageBuild from './abi/storage.json'
-import { log } from './utils'
+import { log, Log } from './utils'
 import { ZERO_ADDRESS } from './constants'
 
-export type Data = {
-  [k: string]: any
+export type Data<Key extends string = string, Value = any> = {
+  [k in Key]: Value
 }
 
 export type ChainParams = {
@@ -13,29 +13,28 @@ export type ChainParams = {
   provider?: any
 }
 
+export type SaveParams = {
+  key: string
+  data: Data
+  owner: string
+  onHash?: (hash: string) => void
+  onReceipt?: (receipt: any) => void
+}
+
 export interface ChainInterface {
   readonly address: string
   readonly rpc: string
-  readonly provider: any
+  readonly provider: string
   readonly instance: any
   readonly signerInstance: any
   readonly pending: boolean
 
-  merge: (params: { oldData: Data; newData: Data }) => Data
-
-  save: (params: {
-    key: string
-    data: Data
-    owner: string
-    onHash?: (hash: string) => void
-    onReceipt?: (receipt: any) => void
-  }) => Promise<any>
-
+  merge: (params: { oldData?: Data; newData?: Data }) => Data
+  save: (params: SaveParams) => Promise<any>
   fetch: (key: string) => Promise<{
     data: Data
     owner: string
   }>
-
   clear: (key: string) => Promise<any>
 }
 
@@ -60,15 +59,15 @@ export default class Chain implements ChainInterface {
 
       this.address = address
       this.provider = provider
-      this.instance = new web3.eth.Contract(StorageBuild.abi as any, address)
-      this.signerInstance = new signerWeb3.eth.Contract(StorageBuild.abi as any, address)
+      this.instance = new web3.eth.Contract(StorageBuild.abi as any[], address)
+      this.signerInstance = new signerWeb3.eth.Contract(StorageBuild.abi as any[], address)
     } catch (error) {
-      log({ title: 'new Chain', value: error, color: 'red' })
+      log({ value: error, title: 'new Chain', type: Log.error })
       throw error
     }
   }
 
-  merge({ oldData = {}, newData = {} }: { oldData: Data; newData: Data }): Data {
+  merge({ oldData = {}, newData = {} }) {
     try {
       const data = { ...oldData }
 
@@ -93,7 +92,7 @@ export default class Chain implements ChainInterface {
 
       return data
     } catch (error) {
-      log({ title: 'Store: merge()', value: error, color: 'red' })
+      log({ value: error, title: 'Chain: merge()', type: Log.error })
       throw error
     }
   }
@@ -110,7 +109,7 @@ export default class Chain implements ChainInterface {
       }
     } catch (error) {
       this.pending = false
-      log({ title: 'Store: fetch()', value: error, color: 'red' })
+      log({ value: error, title: 'Chain: fetch()', type: Log.error })
       throw error
     }
   }
@@ -135,7 +134,7 @@ export default class Chain implements ChainInterface {
           .on('transactionHash', (hash: string) => {
             if (typeof onHash === 'function') onHash(hash)
           })
-          .on('receipt', (receipt: any) => {
+          .on('receipt', (receipt) => {
             if (typeof onReceipt === 'function') onReceipt(receipt)
           })
           .then((response) => {
@@ -149,7 +148,7 @@ export default class Chain implements ChainInterface {
       })
     } catch (error) {
       this.pending = false
-      log({ title: 'Store: save()', value: error, color: 'red' })
+      log({ value: error, title: 'Chain: save()', type: Log.error })
       throw error
     }
   }
@@ -183,7 +182,7 @@ export default class Chain implements ChainInterface {
       })
     } catch (error) {
       this.pending = false
-      log({ title: 'Store: clear()', value: error, color: 'red' })
+      log({ value: error, title: 'Chain: clear()', type: Log.error })
       throw error
     }
   }

@@ -1,36 +1,54 @@
 import { makeObservable, observable, action } from 'mobx'
-import { log } from './utils'
+import { log, Log } from './utils'
+import { EVM_ADDRESS_REGEXP } from './constants'
 import Chain, { Data, ChainInterface, ChainParams } from './Chain'
 
 export interface StoreInterface {
   state: Data | null
   chain: ChainInterface | null
-  newState: (state: Data | null) => void
+  readonly key: string | null
+  readonly ownerAddress: string | null
+  newState: (state?: Data) => void
+  newKey: (key: string) => void
+  newOwnerAddress: (address: string) => void
   newChain: (params: ChainParams) => void
-  get: (key: string) => any
   set: (key: string, value: any) => void
   delete: (key: string) => void
+  save: () => Promise<any>
 }
 
 export default class Store implements StoreInterface {
   state: Data | null = null
   chain: ChainInterface | null = null
+  key = null
+  ownerAddress = null
 
   constructor(
     params: ChainParams & {
       state: Data
+      key: string
+      ownerAddress: string
     }
   ) {
+    const { state, key, ownerAddress } = params
+
+    this.newState(state)
+    this.newKey(key)
+    this.newOwnerAddress(ownerAddress)
+    this.newChain(params)
+
     makeObservable(this, {
       state: observable,
       chain: observable,
+      key: observable,
+      ownerAddress: observable,
       newState: action,
+      newKey: action,
+      newOwnerAddress: action,
       newChain: action,
       set: action,
       delete: action,
     })
-    this.newState(params.state)
-    this.newChain(params)
   }
 
   newState(state) {
@@ -41,21 +59,37 @@ export default class Store implements StoreInterface {
     }
   }
 
-  newChain(params) {
+  newKey(key) {
     try {
-      this.chain = new Chain(params)
+      this.key = key
     } catch (error) {
-      log({ title: 'Store: newChain()', value: error, color: 'red' })
+      log({ value: error, title: 'Store: newKey()', type: Log.error })
       throw error
     }
   }
 
-  get(key) {
+  newOwnerAddress(address) {
     try {
-      if (this.state) {
-        return this.state[key]
+      if (!!address.match(EVM_ADDRESS_REGEXP)) {
+        this.ownerAddress = address
+      } else {
+        log({
+          value: 'Address is not in a EVM format. It is not saved',
+          title: 'Store: newOwnerAddress()',
+          type: Log.warning,
+        })
       }
     } catch (error) {
+      log({ value: error, title: 'Store: newOwnerAddress()', type: Log.error })
+      throw error
+    }
+  }
+
+  newChain(params) {
+    try {
+      this.chain = new Chain(params)
+    } catch (error) {
+      log({ value: error, title: 'Store: newChain()', type: Log.error })
       throw error
     }
   }
@@ -76,6 +110,23 @@ export default class Store implements StoreInterface {
         delete this.state[key]
       }
     } catch (error) {
+      throw error
+    }
+  }
+
+  async save() {
+    try {
+      const { state, key, ownerAddress, chain } = this
+
+      if (!chain || !key || !ownerAddress || !state) return
+
+      return chain.save({
+        key,
+        owner: ownerAddress,
+        data: state,
+      })
+    } catch (error) {
+      log({ value: error, title: 'Store: save()', type: Log.error })
       throw error
     }
   }

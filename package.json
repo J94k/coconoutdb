@@ -1,9 +1,9 @@
 {
   "name": "onoutdb",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
-  "types": "./lib/esm/index.d.ts",
+  "types": "./lib/types/index.d.ts",
   "files": [
     "/lib",
     "README.md",
@@ -13,7 +13,7 @@
     "node": "^16.14.0"
   },
   "scripts": {
-    "build": "rollup -c",
+    "build": "rm -rf ./lib && rollup -c",
     "watch": "rollup -cw",
     "test-store": "jest tests/unit/store.test.ts",
     "test": "jest"
@@ -21,7 +21,7 @@
   "keywords": [
     "onoutdb"
   ],
-  "license": "ISC",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "mobx": "^6.6.0"
   },

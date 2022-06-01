@@ -9,6 +9,7 @@
     "alwaysStrict": true,
     "sourceMap": true,
     "declaration": true,
+    "declarationDir": "./lib/types",
     "removeComments": false,
     "strict": true,
     "noImplicitReturns": true,
@@ -22,5 +23,5 @@
     "esModuleInterop": true,
     "types": ["jest"]
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "tests", "example", "lib", "jest.config.ts", "*.d.ts", "**/*.d.ts"]
 }
