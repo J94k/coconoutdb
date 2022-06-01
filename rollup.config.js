@@ -23,6 +23,8 @@ export default {
     json(),
     typescript({
       typescript: require('typescript'),
+      tsconfig: './tsconfig.json',
+      useTsconfigDeclarationDir: true,
     }),
   ],
 }
