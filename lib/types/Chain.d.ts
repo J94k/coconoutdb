@@ -1,29 +1,30 @@
-export declare type Data = {
-    [k: string]: any;
+export declare type Data<Key extends string = string, Value = any> = {
+    [k in Key]: Value;
 };
 export declare type ChainParams = {
     address?: string;
     rpc?: string;
     provider?: any;
 };
+export declare type SaveParams = {
+    key: string;
+    data: Data;
+    owner: string;
+    onHash?: (hash: string) => void;
+    onReceipt?: (receipt: any) => void;
+};
 export interface ChainInterface {
     readonly address: string;
     readonly rpc: string;
-    readonly provider: any;
+    readonly provider: string;
     readonly instance: any;
     readonly signerInstance: any;
     readonly pending: boolean;
     merge: (params: {
-        oldData: Data;
-        newData: Data;
+        oldData?: Data;
+        newData?: Data;
     }) => Data;
-    save: (params: {
-        key: string;
-        data: Data;
-        owner: string;
-        onHash?: (hash: string) => void;
-        onReceipt?: (receipt: any) => void;
-    }) => Promise<any>;
+    save: (params: SaveParams) => Promise<any>;
     fetch: (key: string) => Promise<{
         data: Data;
         owner: string;
@@ -39,9 +40,9 @@ export default class Chain implements ChainInterface {
     pending: any;
     constructor({ address, rpc, provider }: ChainParams);
     merge({ oldData, newData }: {
-        oldData: Data;
-        newData: Data;
-    }): Data;
+        oldData?: {} | undefined;
+        newData?: {} | undefined;
+    }): {};
     fetch(key: any): Promise<{
         data: any;
         owner: any;
