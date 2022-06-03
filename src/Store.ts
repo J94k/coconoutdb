@@ -1,79 +1,65 @@
 import { makeAutoObservable } from 'mobx'
 import { log, Log } from './utils'
 import { EVM_ADDRESS_REGEXP } from './constants'
-import Chain, { Data, ChainInterface, ChainParams } from './Chain'
+import Chain, { Data, ChainInterface, ChainParams, JsonValue } from './Chain'
 
 export interface StoreInterface {
   data: Data | null
   service: ChainInterface | null
-  readonly key: string | null
-  readonly owner: string | null
-  error: Error | null
+  readonly dataKey: string
+  readonly dataOwner: string
+  error?: Error
   loading: boolean
-  newData: (data?: Data) => void
-  newKey: (key: string) => void
-  newOwner: (address: string) => void
+  newData: (data: Data | null) => void
+  newDataKey: (dataKey: string) => void
+  newDataOwner: (address: string) => void
   newService: (params: ChainParams) => void
-  set: (key: string, value: any) => void
+  set: (key: string, value: JsonValue) => void
   delete: (key: string) => void
-  readFromService: (key?: string) => void
+  readFromService: (dataKey?: string) => void
   saveToService: () => void
 }
 
 export default class Store implements StoreInterface {
   data: Data | null = null
   service: ChainInterface | null = null
-  key = null
-  owner = null
-  error = null
+  dataKey = ''
+  dataOwner = ''
+  error
   loading = false
 
   constructor(
     params: ChainParams & {
-      key: string
-      owner: string
+      dataKey: string
+      dataOwner: string
     }
   ) {
-    const { key, owner } = params
+    const { dataKey, dataOwner } = params
 
-    this.newKey(key)
-    this.newOwner(owner)
+    this.newDataKey(dataKey)
+    this.newDataOwner(dataOwner)
     this.newService(params)
 
     makeAutoObservable(this)
   }
 
   newData(data) {
-    try {
-      this.data = data
-    } catch (error) {
-      throw error
-    }
+    this.data = data
   }
 
-  newKey(key) {
-    try {
-      this.key = key
-    } catch (error) {
-      log({ value: error, title: 'Store: newKey()', type: Log.error })
-      throw error
-    }
+  newDataKey(dataKey) {
+    this.dataKey = dataKey
   }
 
-  newOwner(address) {
-    try {
-      if (!!address.match(EVM_ADDRESS_REGEXP)) {
-        this.owner = address
-      } else {
-        log({
-          value: `Address ${address} is not in a EVM format. It is not saved`,
-          title: 'Store: newOwner()',
-          type: Log.warning,
-        })
-      }
-    } catch (error) {
-      log({ value: error, title: 'Store: newOwner()', type: Log.error })
-      throw error
+  newDataOwner(address) {
+    if (typeof address === 'string' && !!address.match(EVM_ADDRESS_REGEXP)) {
+      this.dataOwner = address
+    } else {
+      log({
+        value: `Address ${address} is not in a EVM format. It is not saved`,
+        title: 'Store: newDataOwner()',
+        type: Log.warning,
+      })
     }
   }
 
@@ -82,42 +68,34 @@ export default class Store implements StoreInterface {
       this.service = new Chain(params)
     } catch (error) {
       log({ value: error, title: 'Store: newService()', type: Log.error })
-      throw error
+      this.error = error
     }
   }
 
   set(key, value) {
-    try {
-      if (this.data) {
-        this.data[key] = value
-      }
-    } catch (error) {
-      throw error
+    if (this.data) {
+      this.data[key] = value
     }
   }
 
   delete(key) {
-    try {
-      if (this.data) {
-        delete this.data[key]
-      }
-    } catch (error) {
-      throw error
+    if (this.data) {
+      delete this.data[key]
     }
   }
 
-  async readFromService(key) {
-    const { key: initKey, service } = this
+  async readFromService(dataKey) {
+    const { dataKey: initKey, service } = this
 
     if (!service) return
 
     this.loading = true
 
     await service
-      .fetch(key || initKey || '')
+      .fetch(dataKey || initKey || '')
       .then(({ data, owner }) => {
         this.newData(data)
-        this.newOwner(owner)
+        this.newDataOwner(owner)
       })
       .catch((error) => {
         log({ value: error, title: 'Store: readFromService()', type: Log.error })
@@ -128,17 +106,17 @@ export default class Store implements StoreInterface {
   }
 
   async saveToService() {
-    const { data, key, owner, service } = this
+    const { data, dataKey, dataOwner, service } = this
 
-    if (!service || !key || !owner || !data) return
+    if (!service || !dataKey || !dataOwner || !data) return
 
     this.loading = true
 
     await service
       .save({
-        key,
         data,
-        owner: owner,
+        key: dataKey,
+        owner: dataOwner,
       })
       .catch((error) => {
         log({ value: error, title: 'Store: saveToService()', type: Log.error })

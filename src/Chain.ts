@@ -3,9 +3,13 @@ import StorageBuild from './abi/storage.json'
 import { log, Log } from './utils'
 import { ZERO_ADDRESS } from './constants'
 
-export type Data<Key extends string = string, Value = any> = {
-  [k in Key]: Value
+export type JsonValue = null | string | number | boolean | JsonObject | JsonValue[]
+
+export interface JsonObject {
+  [k: string]: JsonValue
 }
+
+export type Data = JsonObject
 
 export type ChainParams = {
   address?: string
