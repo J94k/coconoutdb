@@ -1,6 +1,6 @@
 {
-  "name": "onoutdb",
-  "version": "1.1.0",
+  "name": "coconoutdb",
+  "version": "1.1.1",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",
@@ -19,7 +19,7 @@
     "test": "jest"
   },
   "keywords": [
-    "onoutdb"
+    "coconoutdb"
   ],
   "license": "GPL-3.0-or-later",
   "dependencies": {
