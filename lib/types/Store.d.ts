@@ -1,32 +1,37 @@
-import { Data, ChainInterface, ChainParams } from './Chain';
+import { Data, ChainInterface, ChainParams, JsonValue } from './Chain';
 export interface StoreInterface {
-    state: Data | null;
-    chain: ChainInterface | null;
-    readonly key: string | null;
-    readonly ownerAddress: string | null;
-    newState: (state?: Data) => void;
-    newKey: (key: string) => void;
-    newOwnerAddress: (address: string) => void;
-    newChain: (params: ChainParams) => void;
-    set: (key: string, value: any) => void;
+    data: Data | null;
+    service: ChainInterface | null;
+    readonly dataKey: string;
+    readonly dataOwner: string;
+    error?: Error;
+    loading: boolean;
+    newData: (data: Data | null) => void;
+    newDataKey: (dataKey: string) => void;
+    newDataOwner: (address: string) => void;
+    newService: (params: ChainParams) => void;
+    set: (key: string, value: JsonValue) => void;
     delete: (key: string) => void;
-    save: () => Promise<any>;
+    readFromService: (dataKey?: string) => void;
+    saveToService: () => void;
 }
 export default class Store implements StoreInterface {
-    state: Data | null;
-    chain: ChainInterface | null;
-    key: null;
-    ownerAddress: null;
+    data: Data | null;
+    service: ChainInterface | null;
+    dataKey: string;
+    dataOwner: string;
+    error: any;
+    loading: boolean;
     constructor(params: ChainParams & {
-        state: Data;
-        key: string;
-        ownerAddress: string;
+        dataKey: string;
+        dataOwner: string;
     });
-    newState(state: any): void;
-    newKey(key: any): void;
-    newOwnerAddress(address: any): void;
-    newChain(params: any): void;
+    newData(data: any): void;
+    newDataKey(dataKey: any): void;
+    newDataOwner(address: any): void;
+    newService(params: any): void;
     set(key: any, value: any): void;
     delete(key: any): void;
-    save(): Promise<any>;
+    readFromService(dataKey: any): Promise<void>;
+    saveToService(): Promise<void>;
 }

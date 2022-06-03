@@ -1,6 +1,6 @@
 {
   "name": "coconoutdb",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",

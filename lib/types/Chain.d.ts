@@ -1,6 +1,8 @@
-export declare type Data<Key extends string = string, Value = any> = {
-    [k in Key]: Value;
-};
+export declare type JsonValue = null | string | number | boolean | JsonObject | JsonValue[];
+export interface JsonObject {
+    [k: string]: JsonValue;
+}
+export declare type Data = JsonObject;
 export declare type ChainParams = {
     address?: string;
     rpc?: string;
@@ -19,7 +21,6 @@ export interface ChainInterface {
     readonly provider: string;
     readonly instance: any;
     readonly signerInstance: any;
-    readonly pending: boolean;
     merge: (params: {
         oldData?: Data;
         newData?: Data;
@@ -37,7 +38,6 @@ export default class Chain implements ChainInterface {
     provider: any;
     instance: any;
     signerInstance: any;
-    pending: any;
     constructor({ address, rpc, provider }: ChainParams);
     merge({ oldData, newData }: {
         oldData?: {} | undefined;
