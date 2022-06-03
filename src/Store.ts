@@ -1,133 +1,128 @@
-import { makeObservable, observable, action } from 'mobx'
+import { makeAutoObservable } from 'mobx'
 import { log, Log } from './utils'
 import { EVM_ADDRESS_REGEXP } from './constants'
-import Chain, { Data, ChainInterface, ChainParams } from './Chain'
+import Chain, { Data, ChainInterface, ChainParams, JsonValue } from './Chain'
 
 export interface StoreInterface {
-  state: Data | null
-  chain: ChainInterface | null
-  readonly key: string | null
-  readonly ownerAddress: string | null
-  newState: (state?: Data) => void
-  newKey: (key: string) => void
-  newOwnerAddress: (address: string) => void
-  newChain: (params: ChainParams) => void
-  set: (key: string, value: any) => void
+  data: Data | null
+  service: ChainInterface | null
+  readonly dataKey: string
+  readonly dataOwner: string
+  error?: Error
+  loading: boolean
+  newData: (data: Data | null) => void
+  newDataKey: (dataKey: string) => void
+  newDataOwner: (address: string) => void
+  newService: (params: ChainParams) => void
+  set: (key: string, value: JsonValue) => void
   delete: (key: string) => void
-  save: () => Promise<any>
+  readFromService: (dataKey?: string) => void
+  saveToService: () => void
 }
 
 export default class Store implements StoreInterface {
-  state: Data | null = null
-  chain: ChainInterface | null = null
-  key = null
-  ownerAddress = null
+  data: Data | null = null
+  service: ChainInterface | null = null
+  dataKey = ''
+  dataOwner = ''
+  error
+  loading = false
 
   constructor(
     params: ChainParams & {
-      state: Data
-      key: string
-      ownerAddress: string
+      dataKey: string
+      dataOwner: string
     }
   ) {
-    const { state, key, ownerAddress } = params
+    const { dataKey, dataOwner } = params
 
-    this.newState(state)
-    this.newKey(key)
-    this.newOwnerAddress(ownerAddress)
-    this.newChain(params)
+    this.newDataKey(dataKey)
+    this.newDataOwner(dataOwner)
+    this.newService(params)
 
-    makeObservable(this, {
-      state: observable,
-      chain: observable,
-      key: observable,
-      ownerAddress: observable,
-      newState: action,
-      newKey: action,
-      newOwnerAddress: action,
-      newChain: action,
-      set: action,
-      delete: action,
-    })
+    makeAutoObservable(this)
   }
 
-  newState(state) {
-    try {
-      this.state = state
-    } catch (error) {
-      throw error
+  newData(data) {
+    this.data = data
+  }
+
+  newDataKey(dataKey) {
+    this.dataKey = dataKey
+  }
+
+  newDataOwner(address) {
+    if (typeof address === 'string' && !!address.match(EVM_ADDRESS_REGEXP)) {
+      this.dataOwner = address
+    } else {
+      log({
+        value: `Address ${address} is not in a EVM format. It is not saved`,
+        title: 'Store: newDataOwner()',
+        type: Log.warning,
+      })
     }
   }
 
-  newKey(key) {
+  newService(params) {
     try {
-      this.key = key
+      this.service = new Chain(params)
     } catch (error) {
-      log({ value: error, title: 'Store: newKey()', type: Log.error })
-      throw error
-    }
-  }
-
-  newOwnerAddress(address) {
-    try {
-      if (!!address.match(EVM_ADDRESS_REGEXP)) {
-        this.ownerAddress = address
-      } else {
-        log({
-          value: 'Address is not in a EVM format. It is not saved',
-          title: 'Store: newOwnerAddress()',
-          type: Log.warning,
-        })
-      }
-    } catch (error) {
-      log({ value: error, title: 'Store: newOwnerAddress()', type: Log.error })
-      throw error
-    }
-  }
-
-  newChain(params) {
-    try {
-      this.chain = new Chain(params)
-    } catch (error) {
-      log({ value: error, title: 'Store: newChain()', type: Log.error })
-      throw error
+      log({ value: error, title: 'Store: newService()', type: Log.error })
+      this.error = error
     }
   }
 
   set(key, value) {
-    try {
-      if (this.state) {
-        this.state[key] = value
-      }
-    } catch (error) {
-      throw error
+    if (this.data) {
+      this.data[key] = value
     }
   }
 
   delete(key) {
-    try {
-      if (this.state) {
-        delete this.state[key]
-      }
-    } catch (error) {
-      throw error
+    if (this.data) {
+      delete this.data[key]
     }
   }
 
-  async save() {
-    try {
-      const { state, key, ownerAddress, chain } = this
+  async readFromService(dataKey) {
+    const { dataKey: initKey, service } = this
 
-      if (!chain || !key || !ownerAddress || !state) return
+    if (!service) return
 
-      return chain.save({
-        key,
-        owner: ownerAddress,
-        data: state,
+    this.loading = true
+
+    await service
+      .fetch(dataKey || initKey || '')
+      .then(({ data, owner }) => {
+        this.newData(data)
+        this.newDataOwner(owner)
       })
-    } catch (error) {
-      log({ value: error, title: 'Store: save()', type: Log.error })
-      throw error
-    }
+      .catch((error) => {
+        log({ value: error, title: 'Store: readFromService()', type: Log.error })
+        this.error = error
+      })
+
+    this.loading = false
+  }
+
+  async saveToService() {
+    const { data, dataKey, dataOwner, service } = this
+
+    if (!service || !dataKey || !dataOwner || !data) return
+
+    this.loading = true
+
+    await service
+      .save({
+        data,
+        key: dataKey,
+        owner: dataOwner,
+      })
+      .catch((error) => {
+        log({ value: error, title: 'Store: saveToService()', type: Log.error })
+        this.error = error
+      })
+
+    this.loading = false
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "coconoutdb",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",
@@ -10,12 +10,13 @@
     "LICENSE"
   ],
   "engines": {
-    "node": "^16.14.0"
+    "node": ">=16.0.0"
   },
   "scripts": {
     "build": "rm -rf ./lib && rollup -c",
     "watch": "rollup -cw",
     "test-store": "jest tests/unit/store.test.ts",
+    "test-chain": "jest tests/unit/chain.test.ts",
     "test": "jest"
   },
   "keywords": [
@@ -35,6 +36,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@types/jest": "^27.5.1",
+    "@types/node": "^17.0.38",
     "jest": "^28.1.0",
     "rollup": "^2.72.1",
     "rollup-plugin-typescript2": "^0.31.2",
