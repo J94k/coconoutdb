@@ -1,59 +1,51 @@
-import { makeObservable, observable, action } from 'mobx'
+import { makeAutoObservable } from 'mobx'
 import { log, Log } from './utils'
 import { EVM_ADDRESS_REGEXP } from './constants'
 import Chain, { Data, ChainInterface, ChainParams } from './Chain'
 
 export interface StoreInterface {
-  state: Data | null
-  chain: ChainInterface | null
+  data: Data | null
+  service: ChainInterface | null
   readonly key: string | null
-  readonly ownerAddress: string | null
-  newState: (state?: Data) => void
+  readonly owner: string | null
+  error: Error | null
+  loading: boolean
+  newData: (data?: Data) => void
   newKey: (key: string) => void
-  newOwnerAddress: (address: string) => void
-  newChain: (params: ChainParams) => void
+  newOwner: (address: string) => void
+  newService: (params: ChainParams) => void
   set: (key: string, value: any) => void
   delete: (key: string) => void
-  save: () => Promise<any>
+  readFromService: (key?: string) => void
+  saveToService: () => void
 }
 
 export default class Store implements StoreInterface {
-  state: Data | null = null
-  chain: ChainInterface | null = null
+  data: Data | null = null
+  service: ChainInterface | null = null
   key = null
-  ownerAddress = null
+  owner = null
+  error = null
+  loading = false
 
   constructor(
     params: ChainParams & {
-      state: Data
       key: string
-      ownerAddress: string
+      owner: string
     }
   ) {
-    const { state, key, ownerAddress } = params
+    const { key, owner } = params
 
-    this.newState(state)
     this.newKey(key)
-    this.newOwnerAddress(ownerAddress)
-    this.newChain(params)
+    this.newOwner(owner)
+    this.newService(params)
 
-    makeObservable(this, {
-      state: observable,
-      chain: observable,
-      key: observable,
-      ownerAddress: observable,
-      newState: action,
-      newKey: action,
-      newOwnerAddress: action,
-      newChain: action,
-      set: action,
-      delete: action,
-    })
+    makeAutoObservable(this)
   }
 
-  newState(state) {
+  newData(data) {
     try {
-      this.state = state
+      this.data = data
     } catch (error) {
       throw error
     }
@@ -68,36 +60,36 @@ export default class Store implements StoreInterface {
     }
   }
 
-  newOwnerAddress(address) {
+  newOwner(address) {
     try {
       if (!!address.match(EVM_ADDRESS_REGEXP)) {
-        this.ownerAddress = address
+        this.owner = address
       } else {
         log({
-          value: 'Address is not in a EVM format. It is not saved',
-          title: 'Store: newOwnerAddress()',
+          value: `Address ${address} is not in a EVM format. It is not saved`,
+          title: 'Store: newOwner()',
           type: Log.warning,
         })
       }
     } catch (error) {
-      log({ value: error, title: 'Store: newOwnerAddress()', type: Log.error })
+      log({ value: error, title: 'Store: newOwner()', type: Log.error })
       throw error
     }
   }
 
-  newChain(params) {
+  newService(params) {
     try {
-      this.chain = new Chain(params)
+      this.service = new Chain(params)
     } catch (error) {
-      log({ value: error, title: 'Store: newChain()', type: Log.error })
+      log({ value: error, title: 'Store: newService()', type: Log.error })
       throw error
     }
   }
 
   set(key, value) {
     try {
-      if (this.state) {
-        this.state[key] = value
+      if (this.data) {
+        this.data[key] = value
       }
     } catch (error) {
       throw error
@@ -106,28 +98,53 @@ export default class Store implements StoreInterface {
 
   delete(key) {
     try {
-      if (this.state) {
-        delete this.state[key]
+      if (this.data) {
+        delete this.data[key]
       }
     } catch (error) {
       throw error
     }
   }
 
-  async save() {
-    try {
-      const { state, key, ownerAddress, chain } = this
+  async readFromService(key) {
+    const { key: initKey, service } = this
 
-      if (!chain || !key || !ownerAddress || !state) return
+    if (!service) return
 
-      return chain.save({
-        key,
-        owner: ownerAddress,
-        data: state,
+    this.loading = true
+
+    await service
+      .fetch(key || initKey || '')
+      .then(({ data, owner }) => {
+        this.newData(data)
+        this.newOwner(owner)
       })
-    } catch (error) {
-      log({ value: error, title: 'Store: save()', type: Log.error })
-      throw error
-    }
+      .catch((error) => {
+        log({ value: error, title: 'Store: readFromService()', type: Log.error })
+        this.error = error
+      })
+
+    this.loading = false
+  }
+
+  async saveToService() {
+    const { data, key, owner, service } = this
+
+    if (!service || !key || !owner || !data) return
+
+    this.loading = true
+
+    await service
+      .save({
+        key,
+        data,
+        owner: owner,
+      })
+      .catch((error) => {
+        log({ value: error, title: 'Store: saveToService()', type: Log.error })
+        this.error = error
+      })
+
+    this.loading = false
   }
 }
