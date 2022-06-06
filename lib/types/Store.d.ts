@@ -24,7 +24,6 @@ export default class Store implements StoreInterface {
     loading: boolean;
     constructor(params: ChainParams & {
         dataKey: string;
-        dataOwner: string;
     });
     newData(data: any): void;
     newDataKey(dataKey: any): void;
@@ -32,6 +31,6 @@ export default class Store implements StoreInterface {
     newService(params: any): void;
     set(key: any, value: any): void;
     delete(key: any): void;
-    readFromService(dataKey: any): Promise<void>;
+    readFromService(): Promise<void>;
     saveToService(): Promise<void>;
 }
