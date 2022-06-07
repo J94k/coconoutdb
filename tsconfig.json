@@ -23,5 +23,13 @@
     "esModuleInterop": true,
     "types": ["jest"]
   },
-  "exclude": ["node_modules", "tests", "example", "lib", "jest.config.ts", "*.d.ts", "**/*.d.ts"]
+  "exclude": [
+    "node_modules",
+    "tests",
+    "src/appExample",
+    "lib",
+    "jest.config.ts",
+    "*.d.ts",
+    "**/*.d.ts"
+  ]
 }

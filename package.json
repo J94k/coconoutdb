@@ -1,6 +1,6 @@
 {
   "name": "coconoutdb",
-  "version": "1.2.1",
+  "version": "1.3.1",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
   "types": "./lib/types/index.d.ts",
@@ -13,7 +13,7 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "build": "rm -rf ./lib && rollup -c",
+    "build": "rm -rf ./lib && rollup -c && npm pack",
     "watch": "rollup -cw",
     "test-store": "jest tests/unit/store.test.ts",
     "test-chain": "jest tests/unit/chain.test.ts",
@@ -41,6 +41,6 @@
     "rollup": "^2.72.1",
     "rollup-plugin-typescript2": "^0.31.2",
     "ts-node": "^10.8.0",
-    "typescript": "^4.6.4"
+    "typescript": "^4.7.2"
   }
 }

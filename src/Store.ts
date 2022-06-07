@@ -28,16 +28,10 @@ export default class Store implements StoreInterface {
   error
   loading = false
 
-  constructor(
-    params: ChainParams & {
-      dataKey: string
-      dataOwner: string
-    }
-  ) {
-    const { dataKey, dataOwner } = params
+  constructor(params: ChainParams & { dataKey: string }) {
+    const { dataKey } = params
 
     this.newDataKey(dataKey)
-    this.newDataOwner(dataOwner)
     this.newService(params)
 
     makeAutoObservable(this)
@@ -84,15 +78,15 @@ export default class Store implements StoreInterface {
     }
   }
 
-  async readFromService(dataKey) {
-    const { dataKey: initKey, service } = this
+  async readFromService() {
+    const { dataKey, service } = this
 
-    if (!service) return
+    if (!service || !dataKey) return
 
     this.loading = true
 
     await service
-      .fetch(dataKey || initKey || '')
+      .fetch(dataKey)
       .then(({ data, owner }) => {
         this.newData(data)
         this.newDataOwner(owner)
